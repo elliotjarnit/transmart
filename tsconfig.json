@@ -22,10 +22,7 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "baseUrl": ".",
-    "rootDir": ".",
-    "paths": {
-      "@transmart/*": ["packages/*/src"]
-    }
+    "rootDir": "."
   },
-  "include": ["packages/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

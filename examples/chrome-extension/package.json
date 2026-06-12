@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@transmart/cli": "^0.0.3"
+    "transmart": "github:elliotjarnit/transmart"
   }
 }
