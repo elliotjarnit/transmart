@@ -12,6 +12,7 @@ const DEFAULT_PARAMS: Partial<TransmartOptions> = {
   openAIApiModel: 'gpt-3.5-turbo',
   modelContextLimit: 4096,
   modelContextSplit: 1 / 1,
+  vuei18n: false,
 }
 
 export class Transmart {
@@ -22,31 +23,23 @@ export class Transmart {
 
   public async run(options: RunOptions): Promise<TransmartStats> {
     this.validateParams()
-    const {
-      baseLocale,
-      locales,
-      localePath,
-      cacheEnabled = true,
-      namespaceGlob = '**/*.json',
-      singleFileMode = false,
-    } = this.options
+    const { baseLocale, locales, localePath, cacheEnabled = true, namespaceGlob = '**/*.json' } = this.options
+    const isFlatLocaleMode = this.isFlatLocaleMode()
     const targetLocales = locales.filter((item) => item !== baseLocale)
     const runworks: RunWork[] = []
-    const baseLocaleFullPath = singleFileMode ? localePath : path.resolve(localePath, baseLocale)
-    const namespaces = await glob(namespaceGlob, {
-      cwd: baseLocaleFullPath,
-    })
+    const baseLocaleFullPath = this.getBaseLocaleFullPath()
+    const namespaces: string[] = isFlatLocaleMode
+      ? ['app']
+      : await glob(namespaceGlob, {
+          cwd: baseLocaleFullPath,
+        })
     // if cachePath is not provided, use the localePath/.cache as default
     const cachePath = this.options.cachePath || path.resolve(localePath, '.cache')
-    const realNamespaces = singleFileMode ? ['app'] : namespaces
+    const realNamespaces = namespaces
     targetLocales.forEach((targetLocale) => {
       realNamespaces.forEach((ns) => {
-        const inputNSFilePath = singleFileMode
-          ? path.resolve(baseLocaleFullPath, `${baseLocale}.json`)
-          : path.resolve(baseLocaleFullPath, ns)
-        const outputNSFilePath = singleFileMode
-          ? path.resolve(baseLocaleFullPath, `${targetLocale}.json`)
-          : path.resolve(localePath, targetLocale, ns)
+        const inputNSFilePath = this.getInputNSFilePath(ns)
+        const outputNSFilePath = this.getOutputNSFilePath(targetLocale, ns)
 
         if (cacheEnabled) {
           const pairHash = getPairHash(inputNSFilePath, outputNSFilePath)
@@ -108,19 +101,24 @@ export class Transmart {
 
       // For each target locale, scan its output directory for translated files
       for (const targetLocale of targetLocales) {
-        const outputLocaleDir = singleFileMode ? baseLocaleFullPath : path.resolve(localePath, targetLocale)
+        if (isFlatLocaleMode) {
+          const inputPath = this.getInputNSFilePath('app')
+          const outputPath = this.getOutputNSFilePath(targetLocale, 'app')
+
+          if (await fs.pathExists(outputPath)) {
+            validHashes.push(getPairHash(inputPath, outputPath))
+          }
+          continue
+        }
+
+        const outputLocaleDir = path.resolve(localePath, targetLocale)
 
         // Find all JSON namespaces in this locale
         const outputFiles = await glob(namespaceGlob, { cwd: outputLocaleDir })
 
         for (const ns of outputFiles) {
-          const inputPath = singleFileMode
-            ? path.resolve(baseLocaleFullPath, `${baseLocale}.json`)
-            : path.resolve(baseLocaleFullPath, ns)
-
-          const outputPath = singleFileMode
-            ? path.resolve(baseLocaleFullPath, `${targetLocale}.json`)
-            : path.resolve(outputLocaleDir, ns)
+          const inputPath = this.getInputNSFilePath(ns)
+          const outputPath = this.getOutputNSFilePath(targetLocale, ns)
 
           // Only generate a hash if the output file actually exists
           if (await fs.pathExists(outputPath)) {
@@ -161,14 +159,42 @@ export class Transmart {
   }
 
   private validateParams() {
-    const { baseLocale, localePath, openAIApiKey, locales, singleFileMode = false } = this.options
+    const { baseLocale, localePath, openAIApiKey, locales } = this.options
     if (typeof baseLocale !== 'string') throw new Error('valid `baseLocale` must be provided')
     if (typeof openAIApiKey !== 'string') throw new Error('valid `openAIApiKey` must be provided')
     if (!Array.isArray(locales) || locales.some((i) => typeof i !== 'string'))
       throw new Error('`locales` must be Array of string')
-    const baseLocaleFullPath = singleFileMode ? localePath : path.resolve(localePath, baseLocale)
+    const baseLocaleFullPath = this.getBaseLocaleFullPath()
     if (!fs.existsSync(baseLocaleFullPath)) throw new Error('`localePath` not existed')
+    if (this.isFlatLocaleMode() && !fs.existsSync(this.getInputNSFilePath('app'))) {
+      throw new Error('base locale file not existed')
+    }
     // TODO: structure
     this.options = Object.assign({}, DEFAULT_PARAMS, this.options) as Required<TransmartOptions>
+  }
+
+  private isFlatLocaleMode() {
+    return Boolean(this.options.vuei18n || this.options.singleFileMode)
+  }
+
+  private getBaseLocaleFullPath() {
+    const { baseLocale, localePath } = this.options
+    return this.isFlatLocaleMode() ? localePath : path.resolve(localePath, baseLocale)
+  }
+
+  private getInputNSFilePath(ns: string) {
+    const { baseLocale } = this.options
+    const baseLocaleFullPath = this.getBaseLocaleFullPath()
+    return this.isFlatLocaleMode()
+      ? path.resolve(baseLocaleFullPath, `${baseLocale}.json`)
+      : path.resolve(baseLocaleFullPath, ns)
+  }
+
+  private getOutputNSFilePath(targetLocale: string, ns: string) {
+    const { localePath } = this.options
+    const baseLocaleFullPath = this.getBaseLocaleFullPath()
+    return this.isFlatLocaleMode()
+      ? path.resolve(baseLocaleFullPath, `${targetLocale}.json`)
+      : path.resolve(localePath, targetLocale, ns)
   }
 }

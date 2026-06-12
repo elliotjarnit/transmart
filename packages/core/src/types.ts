@@ -87,6 +87,11 @@ export interface TransmartOptions {
    * }
    */
   additionalReqBodyParams?: any
+  /**
+   * Use the Vue i18n flat locale file layout. For example, `localePath/en_US.json`
+   * translates to `localePath/zh_CN.json`.
+   */
+  vuei18n?: boolean
   singleFileMode?: boolean
 }
 
