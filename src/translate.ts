@@ -1,5 +1,6 @@
 import fetch from 'node-fetch'
 import { getLanguageDisplayName } from './language'
+import { requestRateLimit } from './limit'
 import { TranslateParams } from './types'
 
 export async function translate(params: TranslateParams, retryTime = 0): Promise<string> {
@@ -15,6 +16,7 @@ export async function translate(params: TranslateParams, retryTime = 0): Promise
     context,
     systemPromptTemplate,
     additionalReqBodyParams,
+    requestsPerMinuteLimit,
   } = params
   const headers = {
     'Content-Type': 'application/json',
@@ -60,6 +62,7 @@ The aim is to achieve a fluent and structurally sound translation of the JSON co
     ...(additionalReqBodyParams || {}),
   }
   const finalUrlPath = openAIApiUrl + openAIApiUrlPath
+  await requestRateLimit(requestsPerMinuteLimit)
   const res = await fetch(finalUrlPath, {
     method: 'POST',
     headers,

@@ -58,6 +58,8 @@ export class Task {
       openAIApiModel,
       baseLocale,
       context,
+      retryTimes,
+      requestsPerMinuteLimit,
       systemPromptTemplate,
       additionalReqBodyParams,
     } = this.transmart.options
@@ -72,6 +74,8 @@ export class Task {
       openAIApiKey,
       openAIApiUrl,
       openAIApiUrlPath,
+      retryTimes,
+      requestsPerMinuteLimit,
       systemPromptTemplate,
       additionalReqBodyParams,
     })
