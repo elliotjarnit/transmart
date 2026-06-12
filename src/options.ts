@@ -34,6 +34,11 @@ program
     'Maximum number of API requests to send per minute',
     parsePositiveInteger,
   )
+  .option(
+    '--tokens-per-minute-limit <tokensPerMinuteLimit>',
+    'Maximum number of estimated request tokens to send per minute',
+    parsePositiveInteger,
+  )
   .option('--openAI-api-url <openAIApiUrl>', 'OpenAI API base url, useful when using proxy')
   .option('--openAI-api-urlpath <openAIApiUrlPath>', 'OpenAI API url endpoint, which is useful when using proxy')
   .option('--openAI-api-model <openAIApiModel>', 'OpenAI API model, default to`gpt-3.5-turbo`')
@@ -49,7 +54,7 @@ program
 function parsePositiveInteger(value: string) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error('`requestsPerMinuteLimit` must be a positive integer')
+    throw new Error('Rate limits must be positive integers')
   }
   return parsed
 }

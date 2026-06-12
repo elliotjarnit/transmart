@@ -106,6 +106,7 @@ pnpm exec transmart
 | openAIApiKey     | string                                                | OpenAI API 密钥                                                                |    是    |
 | context     | string                                | 提供一些上下文让翻译更准确                                                                             |   否    |
 | requestsPerMinuteLimit | number                                      | 每分钟最多发送的 API 请求数量                                                   |    否    |
+| tokensPerMinuteLimit | number                                        | 每分钟最多发送的预估请求 token 数量                                             |    否    |
 | openAIApiModel   | string                                                | OpenAI API 模型，默认为“gpt-3.5-turbo-16k-0613”                                         |    否    |
 | overrides        | `Record<string, Record<string, Record<string, any>>>` | 如果你不满意 AI 翻译结果，用于部分覆盖生成的 JSON (locale-namespace-key:value) |    否    |
 | namespaceGlob    | string\|string[]                                      | 命名空间匹配项                                                                 |    否    |

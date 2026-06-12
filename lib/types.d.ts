@@ -45,6 +45,10 @@ export interface TransmartOptions {
      */
     requestsPerMinuteLimit?: number;
     /**
+     * Maximum number of estimated request tokens to send per minute.
+     */
+    tokensPerMinuteLimit?: number;
+    /**
      * OpenAI API model, default to `gpt-3.5-turbo`
      */
     openAIApiModel?: string;
@@ -124,6 +128,7 @@ export interface TranslateParams {
     openAIApiUrl: string;
     openAIApiUrlPath: string;
     requestsPerMinuteLimit?: number;
+    tokensPerMinuteLimit?: number;
     systemPromptTemplate: TransmartOptions['systemPromptTemplate'];
     additionalReqBodyParams: any;
 }

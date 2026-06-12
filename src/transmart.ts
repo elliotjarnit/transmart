@@ -159,7 +159,7 @@ export class Transmart {
   }
 
   private validateParams() {
-    const { baseLocale, localePath, openAIApiKey, locales, requestsPerMinuteLimit } = this.options
+    const { baseLocale, localePath, openAIApiKey, locales, requestsPerMinuteLimit, tokensPerMinuteLimit } = this.options
     if (typeof baseLocale !== 'string') throw new Error('valid `baseLocale` must be provided')
     if (typeof openAIApiKey !== 'string') throw new Error('valid `openAIApiKey` must be provided')
     if (!Array.isArray(locales) || locales.some((i) => typeof i !== 'string'))
@@ -169,6 +169,9 @@ export class Transmart {
       (!Number.isInteger(requestsPerMinuteLimit) || requestsPerMinuteLimit < 1)
     ) {
       throw new Error('`requestsPerMinuteLimit` must be a positive integer')
+    }
+    if (tokensPerMinuteLimit !== undefined && (!Number.isInteger(tokensPerMinuteLimit) || tokensPerMinuteLimit < 1)) {
+      throw new Error('`tokensPerMinuteLimit` must be a positive integer')
     }
     const baseLocaleFullPath = this.getBaseLocaleFullPath()
     if (!fs.existsSync(baseLocaleFullPath)) throw new Error('`localePath` not existed')

@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { encode } from 'gpt-3-encoder'
 import { getLanguageDisplayName } from './language'
 import { requestRateLimit } from './limit'
 import { TranslateParams } from './types'
@@ -17,6 +18,7 @@ export async function translate(params: TranslateParams, retryTime = 0): Promise
     systemPromptTemplate,
     additionalReqBodyParams,
     requestsPerMinuteLimit,
+    tokensPerMinuteLimit,
   } = params
   const headers = {
     'Content-Type': 'application/json',
@@ -62,7 +64,11 @@ The aim is to achieve a fluent and structurally sound translation of the JSON co
     ...(additionalReqBodyParams || {}),
   }
   const finalUrlPath = openAIApiUrl + openAIApiUrlPath
-  await requestRateLimit(requestsPerMinuteLimit)
+  await requestRateLimit({
+    requestsPerMinuteLimit,
+    tokensPerMinuteLimit,
+    tokenCount: tokensPerMinuteLimit === undefined ? undefined : getRequestTokenCount(body),
+  })
   const res = await fetch(finalUrlPath, {
     method: 'POST',
     headers,
@@ -95,3 +101,8 @@ const getPluralSuffixes = (input: string): string =>
     .resolvedOptions()
     .pluralCategories.map((cat) => `_${cat}`)
     .join(', ')
+
+const getRequestTokenCount = (body: any): number => {
+  const reservedCompletionTokens = typeof body.max_tokens === 'number' ? body.max_tokens : 0
+  return encode(JSON.stringify(body)).length + reservedCompletionTokens
+}
